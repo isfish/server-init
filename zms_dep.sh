@@ -30,8 +30,9 @@ if [ -s /usr/local/nginx ]; then
 	echo "nginx installed"
 else
 	cd /usr/src
-	wget -o nginx.tar.gz http://nginx.org/download/nginx-1.14.0.tar.gz 
-	tar -zxf nginx.tar.gz && cd nginx-1.14.0
+	wget http://nginx.org/download/nginx-1.14.0.tar.gz 
+	tar -zxf nginx-1.14.0.tar.gz 
+	cd nginx-1.14.0
 	./configure --user=${ngx_user} --group=${ngx_user} --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_ssl_module --with-http_v2_module --with-http_gzip_static_module --with-http_sub_module --with-stream --with-stream_ssl_module
 	make && make install
 	cd ..
@@ -89,12 +90,12 @@ EOF
 	[Install]
 	WantedBy=multi-user.target
 EOF
-	systemctl enable nginx.service
-	systemctl start nginx.service
 fi
-if [ ! -s ${ngx_loc}/vhosts ]; then
-	mkdir -p ${ngx_loc}/vhosts
+if [ ! -d ${ngx_loc}/conf/vhosts ]; then
+	mkdir -p ${ngx_loc}/conf/vhosts
 fi
+systemctl enable nginx.service
+systemctl start nginx.service
 cd /usr/src
 	git clone https://github.com/Neilpang/acme.sh.git acme 
 	cd acme
@@ -121,21 +122,21 @@ else
 		/usr/local/acme/acme.sh --issue --dns ${dns_server} -d ${domain}
 	fi
 fi
-if [ $? -eq 0 ]; then
+if [[ /usr/local/acme/certs/${domain} ]]; then
 	mkdir -p /home/${ngx_user}/ssl/${domain}
-	/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/${ngx_user}/ssl/${domain}/pubkey.pem --key-file /home/${ngx_user}/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
-	cat>/usr/local/nginx/conf/vhosts/${domain}.conf<<EOF
+	/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/${ngx_user}/ssl/${domain}/pubkey.pem --key-file /home/${ngx_user}/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
+	cat>${ngx_loc}/conf/vhosts/${domain}.conf<<EOF
 	server{
         	listen          80;
         	server_name     ${domain};
-        	rewrite         ^(.*)$ https://\$\{server_name\}\$1' permanent;
+        	rewrite         ^(.*)$ https://\${server_name}\$1' permanent;
 	}	
 
 	server{
         	listen          443 ssl;
         	server_name     ${domain};
         	location / {
-                	proxy_pass              http://127.0.0.1:$port;
+                	proxy_pass              http://127.0.0.1:${port};
                 	proxy_set_header        Host            \$host;
                 	proxy_set_header        X-Real-IP       \$remote_addr;
               		proxy_set_header        X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -162,11 +163,11 @@ EOF
 	./venv/bin/pip install -i https://pypi.douban.com/simple gunicorn gevent
 	./venv/bin/pip install -i https://pypi.douban.com/simple -r requirements.txt
 	cp more_configs/config_google_and_zhwikipedia.py config.py
-	sed -i 's/my_host_name ='127.0.0.1'/my_host_name = "${domain}"/g' config.py
-	sed -i 's#my_host_scheme='http://'#my_host_scheme='https://'#g' config.py 
+	sed -i "s#my_host_name ='127.0.0.1'#my_host_name = '${domain}'#g" config.py
+	sed -i "s#my_host_scheme='http://'#my_host_scheme='https://'#g" config.py 
 	# 启动 zmirror 服务器
 	read -p "enter a port for zmirror server to listen" port
-	if [ "${port}" = " "]; then
+	if [[ "${port}" = "" ]]; then
 		port="8964"
 	fi
 	./venv/bin/gunicorn --daemon --capture-output --log-file zmirror.log --access-logfile zmirror-access.log --bind 127.0.0.1:${port} --workers 2 --worker-connections 100 wsgi:application
