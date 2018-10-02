@@ -14,113 +14,106 @@ fi
 yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 yum makecache
 yum install -y python36u python36u-devel python36u-pip gcc* git2u  crontabs openssl openssl-devel zlib zlib-devel pcre pcre-devel gd gd-devel
+echo "add user to manage nginx."
+read -p "please enter an user to manager nginx process.Default user is wwww" ngx_user
+if [[ "${ngx_user}"=""]];
 if [ -s /usr/local/nginx ]; then
 	echo "nginx installed"
 else
 # add nginx user
-useradd -d /www -s /sbin/nologin www
-cd /usr/src
-wget -O nginx.tar.gz http://nginx.org/download/nginx-1.14.0.tar.gz 
-tar -zxf nginx.tar.gz && cd nginx-1.14.0
-./configure --user=www --group=www --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_ssl_module --with-http_v2_module --with-http_gzip_static_module --with-http_sub_module --with-stream --with-stream_ssl_module
-make && make install
-cd ..
-ngx_loc="/usr/local/nginx"
-mv ${ngx_loc}/conf/nginx.conf ${ngx_loc}/conf/nginx_bak
-cat>${ngx_loc}/conf/nginx.conf<<EOF
-	user  www;
-worker_processes  1;
+	cd /usr/src
+	wget -o nginx.tar.gz http://nginx.org/download/nginx-1.14.0.tar.gz 
+	tar -zxf nginx.tar.gz && cd nginx-1.14.0
+	./configure --user=www --group=www --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_ssl_module --with-http_v2_module --with-http_gzip_static_module --with-http_sub_module --with-stream --with-stream_ssl_module
+	make && make install
+	cd ..
+	ngx_loc="/usr/local/nginx"
+	mv ${ngx_loc}/conf/nginx.conf ${ngx_loc}/conf/nginx_bak
+	cat>${ngx_loc}/conf/nginx.conf<<EOF
+		user  www;
+		worker_processes  1;
+		#error_log  logs/error.log;
+		#error_log  logs/error.log  notice;
+		#error_log  logs/error.log  info;
+		pid        logs/nginx.pid;
+		events {
+    			worker_connections  1024;
+		}		
 
-#error_log  logs/error.log;
-#error_log  logs/error.log  notice;
-#error_log  logs/error.log  info;
-
-pid        logs/nginx.pid;
-
-
-events {
-    worker_connections  1024;
-}
-
-http {
-    include            mime.types;
-    default_type       application/octet-stream;
-    server_tokens      off;
-    charset            UTF-8;
-
-    sendfile           on;
-    tcp_nopush         on;
-    tcp_nodelay        on;
-
-    keepalive_timeout  60;
-
-    #... ...#
-
-    gzip               on;
-    gzip_vary          on;
-
-    gzip_comp_level    6;
-    gzip_buffers       16 8k;
-
-    gzip_min_length    1000;
-    gzip_proxied       any;
-    gzip_disable       "msie6";
-
-    gzip_http_version  1.0;
-
-    gzip_types         text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
-
-    #... ...#
-
-    include            vhosts/*.conf;
+		http {
+    			include            mime.types;
+    			default_type       application/octet-stream;
+    			server_tokens      off;
+    			charset            UTF-8;
+    			sendfile           on;
+    			tcp_nopush         on;
+    			tcp_nodelay        on;
+    			keepalive_timeout  60;
+    			gzip               on;
+    			gzip_vary          on;
+    			gzip_comp_level    6;
+    			gzip_buffers       16 8k;
+    			gzip_min_length    1000;
+    			gzip_proxied       any;
+   			gzip_disable       "msie6";
+    			gzip_http_version  1.0;
+    			gzip_types         text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
+    			include            vhosts/*.conf;
 }
 EOF
-mkdir ${ngx_loc}/conf/vhosts
-${ngx_loc}/sbin/nginx -t
+	mkdir ${ngx_loc}/conf/vhosts
+	${ngx_loc}/sbin/nginx -t
+	if [ $? -eq 0 ]; then
+		echo "nginx has been installed successfully! You can go to next step!"
+	else
+		echo "sorry, nginx has been failed to install! This work will be stoped!"
+		exit 1
+	fi
+	cat>/lib/systemd/system/nginx.service<<EOF
+	[Unit]
+	Description=Nginx Process Manager
+	After=network.target
+	[Service]
+	Type=forking
+	ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
+	ExecReload=/usr/local/nginx/sbin/nginx -s reload
+	ExecStop=/usr/local/nginx/sbin/nginx -s quit
+	PrivateTmp=false
+	[Install]
+	WantedBy=multi-user.target
+EOF
+	systemctl enable nginx.service
+	systemctl start nginx.service
+fi
+acme.sh 
 if [ $? -eq 0 ]; then
-	echo "nginx has been installed successfully! You can go to next step!"
-else
-	echo "sorry, nginx has been failed to install! This work will be stoped!"
-	exit 1
+	echo "acme.sh has installed for root. Let's continue to issue a certificate!"
+else:
+	echo ""sorry, acme.sh has not been installed yet. Next step will install it for you.
+	git clone https://github.com/Neilpang/acme.sh.git acme && cd acme
+	read -p "please enter the location you want to install for acme.sh:" ac_home
+	read -p "please enter the configuration location for acme.sh" cfg_home
+	read -p "please enter the certshome for store issued certs:" cts_home
+	if [[ "${ac_home}"="" && "${cfg_home}"="" && "${cts_home}"="" ]]; then
+		./acme.sh --install --home /usr/local/acme --cert-home /usr/local/acme/certs --config-home /usr/local/acme/config
+	else
+		./acme.sh --install --home ${ac_home} --cert-home ${cts_home} --config-home ${cfg_home}
+	fi
+	source ~/.bashrc ~/.bash_profile
 fi
-cat>/lib/systemd/system/nginx.service<<EOF
-[Unit]
-Description=Nginx Process Manager
-After=network.target
- 
-[Service]
-Type=forking
-ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
-ExecReload=/usr/local/nginx/sbin/nginx -s reload
-ExecStop=/usr/local/nginx/sbin/nginx -s quit
-PrivateTmp=false
- 
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl enable nginx.service
-systemctl start nginx.service
-fi
-git clone https://github.com/Neilpang/acme.sh.git acme && cd acme
-read -p "Please enter the home for acme.sh:" ac_home
-read -p "The home for configuration of acme:" cfg_home
-read -p "Well, enter the certshome for store issued certs:" cts_home
-cd acme
-if [[ "${ac_home}"="" && "${cfg_home}"="" && "${cts_home}"="" ]]; then
-	./acme.sh --install --home /usr/local/acme --cert-home /usr/local/acme/certs --config-home /usr/local/acme/config
-else
-	./acme.sh --install --home ${ac_home} --cert-home ${cts_home} --config-home ${cfg_home}
-fi
-source ~/.bashrc ~/.bash_profile
-clear 
 read -p "Enter the domain you want to issue a certificate:" domain
 if [[ -s /usr/local/acme/certs/${domain} ]]; then
-	echo "The domain you input has a certificate, it'll will not be issued!"
-	echo "If the certificate has been expired, please renew it manually after this process!!"
+	echo "the domain you input has a certificate, it'll will not be issued!"
+	echo "if the certificate has been expired, please renew it manually after this process!!"
 else
-	read -p "Please enter your dns server and api in a special form:" api_id api_key dns_server
-	export DP_Id="${api_id}" DP_Key="${api_key}"
-	/usr/local/acme/acme.sh --issue --dns ${dns_server} -d ${domain}
+	echo "we used dns method to issue a certificate,it means you need to provide your api of your dns server where your domain in."
+	echo "you MUST the infomation here, or you will fail to issue a certificate and get error messages."
+	echo "please see https://github.com/Neilpang/acme.sh/tree/master/dnsapi for details"
+	if [[ "${ac_home}"!="" && "{ac_home}"!="/usr/local/acme" ]]; then
+		${ac_home}/acme.sh --issue --dns ${dns_server} -d ${domain}
+	else
+		/usr/local/acme/acme.sh --issue --dns ${dns_server} -d ${domain}
+	fi
 fi
 mkdir -p /www/ssl/${domain}
 /usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /www/ssl/${domain}/pubkey.pem --key-file /www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
