@@ -1,7 +1,9 @@
 #! /bin/bash
-
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
+echo "--------------------------------------------------"
+echo "| A scipt for auto install zmirror in centos vps |"
+echo "--------------------------------------------------"
 ## waring
 r_e(){
 	echo -e "\e[1;31m$1\e[0m"
@@ -18,13 +20,15 @@ y_e(){
 b_e(){
 	echo -e "\e[1;34m$1\e[0m"
 }
-# run this script as root, if not the process will be canceled.
 
+
+# run this script as root, if not the process will be canceled.
+b_e "[-] check for executor of the script"
 if [ $(id -u) != "0" ]; then
 	r_e Error: You must run the script as root!
 	exit 1
 fi
-
+b_e "[-] install new repo and necessary dependencies."
 # yum install dependency from ius
 yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 yum makecache
@@ -113,6 +117,7 @@ fi
 systemctl enable nginx.service
 systemctl start nginx.service
 
+b_e "[-] configue a ssl certificate"
 y_e "====================================================================================================="
 y_e "do you want to install acme.sh for issue a certificate from Let's encrypt? Default choice is not."
 y_e "in order to run mirror correctly you must has a certificate for the domain you used as a proxy domain"
@@ -120,8 +125,8 @@ y_e "if you don't have a certificate yet, please choose 'y' in below"
 y_e "we will guide you to issue a certificate in a simple way"
 y_e "====================================================================================================="
 read -p "install acme.sh?[y/n]" ins_acm
-case "${ins_acme}" in
-	[yY][eE][sS])
+case "${ins_acm}" in
+	[yY][eE][sS]|[yY])
 		cd /usr/src
 		git clone https://github.com/Neilpang/acme.sh.git acme 
 		cd acme
@@ -140,14 +145,15 @@ case "${ins_acme}" in
 				y_e "if the certificate has been expired, please renew it manually after this process!!"
 				y_e "=================================================================================="
 			else
-				y_e "========================================================================================================================"
-				y_e "we used dns method to issue a certificate,it means you need to provide your api of your dns server where your domain in."
-				y_e "you MUST the infomation here, or you will fail to issue a certificate and get error messages."
+				y_e "==========================================================================================================================="
+				y_e "we use dns-api method to issue a certificate,it means you need to provide your api of your dns server where your domain in."
+				y_e "you MUST input the infomation of dns here, or you will fail to issue a certificate and get error messages."
 				y_e "please see https://github.com/Neilpang/acme.sh/tree/master/dnsapi for details"
-				y_e "========================================================================================================================="
+				y_e "we are so sorry we can do this automatically now before our limit knowledge"
+				y_e "============================================================================================================================"
 				read -p "enter your dns server:" dns_server
 					if [[ "${dns_server}" = "" ]]; then 
-						echo "you don't specify your dns server, it can not issue a certificate for your domain."
+						r_e "you don't specify your dns server, it can not issue a certificate for your domain."
 						exit 1
 					fi
 				if [[ "${ac_home}" != "" && "${ac_home}" != "/usr/local/acme" ]]; then
@@ -191,14 +197,14 @@ EOF
 			r_e "sorry, it's failed to issue a certificate. please make sure you have enter the right dns api and dns server already."
 		fi
 	;;
-	[nN][oO])
+        [nN][oO]|[nN])
 		y_e "===================================================================================================="
 		y_e "you don't choose to install acme.sh, it may mean you have instated it before or has a issue already."
 		y_e "we don't care which situation you are in, we need you to provide the infomation below."
 		y_e "===================================================================================================="
 		read -p "please input the location of your public key:" pub_key
 		read -p "please input the location of your private key:" priv_key
-		if [[ "${pub_key}" ="" || "${priv_key}" ="" ]]; then
+		if [[ "${pub_key}"="" || "${priv_key}"="" ]]; then
 			r_e "none of the public key or private key can be blank, you must specify both of them!"
 			exit 1
 		else
@@ -232,13 +238,14 @@ EOF
 EOF
 		fi
 	;;
-	*)
-		y_e "========================================================================"
+        *)
+                y_e "========================================================================"
+                y_e "you don't do any choose!"
 		y_e "the default is not to installed, please make sure yo have a certificate."
-		y_e "========================================================================"
-		ins_acm="n"
-	;;
+                y_e "========================================================================"
+                ins_acm="n"
 esac
+
 b_e "[-] mkdir for your website"
 	if [ ! -d "/home/${ngx_user}/site/${domain}" ]; then
         	mkdir -p /home/${ngx_user}/site/${domain} && cd /home/${ngx_user}/site/${domain}
@@ -631,7 +638,6 @@ EOF
 			*)
 				echo "you don't choose a site to install, this will install google and zhwikipedia by default"
 				site="5"
-			;;
 	esac
 	fi
 	done
