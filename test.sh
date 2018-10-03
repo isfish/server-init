@@ -1,17 +1,11 @@
 #!/bin/bash
-
-if grep -qi "www" /etc/passwd; then
+tests="home"
+remote="paths"
+if env | grep -i "$tests" && env | grep -i "$remote"; then 
 	echo "true"
 else
 	echo "false"
 fi
 
-if grep -qi "wwww" /etc/passwd; then 
-	echo "1"
-else
-	echo "0"
-fi
+remote="555555"
 
-
-my_host_name='demo.ifishs.org'
-my_host_scheme='http://'
