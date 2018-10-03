@@ -11,3 +11,7 @@ if grep -qi "wwww" /etc/passwd; then
 else
 	echo "0"
 fi
+
+
+my_host_name='demo.ifishs.org'
+my_host_scheme='http://'
