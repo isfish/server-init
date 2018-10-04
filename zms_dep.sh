@@ -121,17 +121,6 @@ if [ -s ${ngx_loc}/conf/vhosts/${domain}.conf ]; then
 	r_e "The domain exist, exit"
 	exit 1
 fi
-r_e "=========================================================================================================================="
-r_e "=== In oreder to run the mirror correctly, you must use https scheme for your domain, hence you need a ssl certificate ==="
-r_e "=== Let's encrypt can provide you a free certificate with wildcard support. so I recommend you to issue a certificate  ==="
-r_e "=== from there. Thanks to Neilpang's work, we issue a certificate from Let's easily by his tool--acme.sh. Thanks a lot ==="
-r_e "=== here I use this tool to issue a certificate for your domain, and I use dns api to do this because it's convenient  ==="
-r_e "=== This mode need you to export the api of your dns server in a spical form as an environmet varabile. And the dnsapi ==="
-r_e "=== can be found in your dns server, then you should export them in a special form and enter the correspond infomation ==="
-r_e "=== we will check whether you do this correctly, if not, the script will stop and quit. But this dosen't mean that you ==="
-r_e "=== can not use this script to depoly the mirror, it just means you need to choose 'no' below and issue a certificate. ==="
-r_e "=== For how to do, please visit https://github.com/Neilpang/acme.sh/tree/master/dnsapi for details and do it yourself. ==="
-r_e "=========================================================================================================================="
 read -p "install acme.sh?[y/n]" ins_acm
 case "${ins_acm}" in
 	[yY][eE][sS]|[yY])
@@ -171,10 +160,6 @@ case "${ins_acm}" in
 		fi
 	;;
         [nN][oO]|[nN])
-		y_e "============================================================================================================"
-		y_e "=== You don't choose to install acme.sh, it may mean you have instated it before or has a issue already. ==="
-		y_e "=== in order to run the mirror service here, we need you to provide the infomation of certificate below. ==="
-		y_e "============================================================================================================"
 		read -p "please input the full location of your public key(like /home/www/mypub.pem):" pub_key
 		read -p "please input the full location of your private key(like /home/www/mypub.pem):" priv_key
 		if [[ "${pub_key}" = "" || "${priv_key}" = "" ]]; then
@@ -201,18 +186,6 @@ b_e "[-] mkdir for your website"
 	else
 		g_e "home exist, nothing to do."
 	fi
-	y_e "=================================================================================================================="
-	y_e "=== We are going to install the site you want to install. please specify the site below, you can installed one ==="
-	y_e "=== site a time at different location. we are sorry, but this is the limitation of the zmirror project not us. ==="
-	y_e "=== we will use site name as the directory name, and it's located under the domain home of home of nginx user. ==="
-	y_e "=================================================================================================================="
-	
-	r_e "======================================================================================================"
-        r_e "=== Enter a port number here to listen mirror server called gunicorn, which works in the your vps. ==="
-        r_e "=== please do not enter number like 80,443,3306 etc. which is used by other program. If you depoly ==="
-	r_e "=== multi mirrors on the vps, please remember to use different port for each mirror. If you do not ==="
-	r_e "=== enter a number, script will be stop. Don't forget to allow this port(s) in the firewall rules. ==="
-        r_e "======================================================================================================"
         read -p "please enter a port to listen zmirror server:" port
         if [[ "${port}" = "" ]]; then
                 r_e "port not specify, exit."
