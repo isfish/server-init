@@ -136,35 +136,37 @@ read -p "install acme.sh?[y/n]" ins_acm
 case "${ins_acm}" in
 	[yY][eE][sS]|[yY])
 		r_e "please make sure you have read the infomation above already before continue"
-		read -p "enter your dns server(like dns_dp):" dns_server
-		read -p "enter the dns api in the some form as you do before(like, DP_Id, DP_Key)" dns_id dns_key
-		if [[ "${dns_server}" = "" ||  "${dns_id}" = ""  || "${dns_key}" = ""  ]]; then
-			r_e "none of infomation of dns api can leave as blank, please specify them correctly."
-			exit 1
+		if [ ! -d /usr/local/acme ]; then
+			cd /usr/src
+			git clone https://github.com/Neilpang/acme.sh.git acme
+			cd acme
+			./acme.sh --install --home /usr/local/acme --cert-home /usr/local/acme/certs --config-home /usr/local/acme/config
+			cd .. && rm -rf acme
 		else
-			if env | grep -Eqi "$dns_id" && env | grep -Eqi "$dns_key" ; then
-				if [ ! -d /usr/local/acme ]; then
-					cd /usr/src
-					git clone https://github.com/Neilpang/acme.sh.git acme
-					cd acme
-					./acme.sh --install --home /usr/local/acme --cert-home /usr/local/acme/certs --config-home /usr/local/acme/config
-					cd .. && rm -rf acme
-				fi
-				if [[ -s /usr/local/acme/certs/${domain} ]]; then
-					g_e "=========================================================================================="
-					g_e "=== The domain you input here has a certificate, it'll will not be issued, but will be ==="
-					g_e "=== used as in .conf file of nginx virtual which use to server as mirror's web server. ==="
-					g_e "=========================================================================================="
-				else
+			g_e "acme.sh exist"
+		fi
+		if [ -d /usr/local/acme/certs/${domain} ]; then
+			g_e "=========================================================================================="
+			g_e "=== The domain you input here has a certificate, it'll will not be issued, but will be ==="
+			g_e "=== used as in .conf file of nginx virtual which use to server as mirror's web server. ==="
+			g_e "=========================================================================================="
+		else
+			read -p "enter your dns server(like dns_dp):" dns_server
+			read -p "enter the dns api in the some form as you do before(like, DP_Id, DP_Key)" dns_id dns_key
+			if [[ "${dns_server}" = "" ||  "${dns_id}" = ""  || "${dns_key}" = ""  ]]; then
+				r_e "none of infomation of dns api can leave as blank, please specify them correctly."
+				exit 1
+			else
+				if env | grep -Eqi "$dns_id" && env | grep -Eqi "$dns_key" ; then
 						/usr/local/acme/acme.sh --issue  --dns ${dns_server} -d ${domain}
 						if [ $? -ne 0 ]; then
 							r_e "problem occurs when issue a certicate, exit."
 							exit 1
 						fi
-				fi
-			else
-				r_e "the infomation of dns api you specify was not found in environment varavile "
-				exit 1
+				else
+					r_e "the infomation of dns api you specify was not found in environment varavile "
+					exit 1
+				fi	
 			fi
 		fi
 	;;
@@ -308,7 +310,7 @@ EOF
 	fi
 
 ## intall certificate and configure nginx vitrual conf
-if [[ -d /usr/local/acme/certs/${domain} ]]; then
+if [ -d /usr/local/acme/certs/${domain} ]; then
 	mkdir -p /home/www/ssl/${domain}
 	/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
 	cat>${ngx_loc}/conf/vhosts/${domain}.conf<<EOF
@@ -338,7 +340,7 @@ if [[ -d /usr/local/acme/certs/${domain} ]]; then
         			ssl_session_timeout     1d;
 		}
 EOF
-else
+elif [[ "${pub_key}" = "" && "{priv_key}" = "" ]]; then
 	cat>${ngx_loc}/conf/vhosts/${domain}.conf<<EOF
 		server{
 			listen          80;
@@ -368,6 +370,8 @@ else
                 		}
 		}
 EOF
+else
+	r_e "sorry, error occur during certificate, altrough the site may be installed correctly. so please check the ssl configuration manually"
 fi
 chown -R www:www /home/www/site
 service nginx relaod
