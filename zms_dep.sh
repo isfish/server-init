@@ -299,7 +299,7 @@ b_e "[-] mkdir for your website"
 			Description= Auto start for mirror ${site}
 			After=network.target
 			[Service]
-			Restart=On-ailure
+			Restart=On-failure
 			WorkingDirectory=/home/www/site/${domain}/${site}
 			ExecStart=/home/www/site/${domain}/${site}/venv/bin/gunicorn --log-file zmirror_${site}.log --access-logfile zmirror_access_${site}.log --bind 127.0.0.1:${port} --workers 2 --worker-connections 100 wsgi:application
 			[Install]
