@@ -374,5 +374,5 @@ else
 	r_e "sorry, error occur during certificate, altrough the site may be installed correctly. so please check the ssl configuration manually"
 fi
 chown -R www:www /home/www/site
-service nginx relaod
+service nginx reload
 
