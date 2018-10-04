@@ -367,4 +367,4 @@ EOF
 fi
 chown -R www:www /home/www/site
 service nginx relaod
-fi
+
