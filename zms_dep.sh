@@ -31,7 +31,7 @@ fi
 #yum install dependency from ius
 yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 yum makecache
-yum install -y python36u python36u-devel python36u-pip gcc* git2u  net*tools lsof crontabs openssl openssl-devel zlib zlib-devel pcre pcre-devel gd gd-devel vim tar unzip zip 
+yum install -y python36u python36u-devel python36u-pip gcc* git2u  net-tools lsof crontabs openssl openssl-devel zlib zlib-devel pcre pcre-devel gd gd-devel vim tar unzip zip 
 
 # add user to manager nginx 
 b_e "[-] add user to manage nginx."
