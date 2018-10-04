@@ -1,4 +1,8 @@
 #! /bin/bash
+# author:bunsx
+# date:10/1/2018
+# description: see the first serval echo line
+# version: 1.0 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 echo "--------------------------------------------------"
