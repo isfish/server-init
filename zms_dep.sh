@@ -31,21 +31,15 @@ fi
 #yum install dependency from ius
 yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 yum makecache
-yum install -y python36u python36u-devel python36u-pip gcc* git2u  lsof crontabs openssl openssl-devel zlib zlib-devel pcre pcre-devel gd gd-devel vim tar unzip zip 
+yum install -y python36u python36u-devel python36u-pip gcc* git2u  net*tools lsof crontabs openssl openssl-devel zlib zlib-devel pcre pcre-devel gd gd-devel vim tar unzip zip 
 
 # add user to manager nginx 
 b_e "[-] add user to manage nginx."
-read -p  "please enter an user to manager nginx process:" ngx_user
-if [[ "${ngx_user}" != "" ]]; then
-	if grep -Eqi "${ngx_user}" /etc/passwd; then
-		g_e "${ngx_user} has been added."
+	if grep -Eqi "www" /etc/passwd; then
+		g_e "www has been added."
 	else
-		useradd  -s /sbin/nologin ${ngx_user}
+		useradd  -s /sbin/nologin www
 	fi
-else
-	r_e "you must enter user to manager nginx, or the program will be canceled."
-	exit 1
-fi
 if [ -s /usr/local/nginx ]; then
 	g_e "nginx has been installed, nothing to do."
         ngx_loc="/usr/local/nginx"
@@ -55,13 +49,14 @@ else
 	wget http://nginx.org/download/nginx-1.14.0.tar.gz 
 	tar -zxf nginx-1.14.0.tar.gz 
 	cd nginx-1.14.0
-	./configure --user=${ngx_user} --group=${ngx_user} --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_ssl_module --with-http_v2_module --with-http_gzip_static_module --with-http_sub_module --with-stream --with-stream_ssl_module
+	./configure --user=www --group=www --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_ssl_module --with-http_v2_module --with-http_gzip_static_module --with-http_sub_module --with-stream --with-stream_ssl_module
 	make && make install
 	cd ..
 	ngx_loc="/usr/local/nginx"
+	mkdir -p ${ngx_loc}/conf/vhosts
 	mv ${ngx_loc}/conf/nginx.conf ${ngx_loc}/conf/nginx_bak
 	cat>${ngx_loc}/conf/nginx.conf<<EOF
-		user  ${ngx_user};
+		user  www;
 		worker_processes  1;
 		#error_log  logs/error.log;
 		#error_log  logs/error.log  notice;
@@ -113,69 +108,58 @@ EOF
 	WantedBy=multi-user.target
 EOF
 fi
-if [ ! -d ${ngx_loc}/conf/vhosts ]; then
-	mkdir -p ${ngx_loc}/conf/vhosts
-fi
 systemctl enable nginx.service
 systemctl start nginx.service
 
-b_e "[-] issue a certificate for the domain"
-y_e "=========================================================================================================================="
-y_e "=== In oreder to run the mirror correctly, you must use https scheme for your domain, hence you need a ssl certificate ==="
-y_e "=== Let's encrypt can provide you a free certificate with wildcard support. so I recommend you to issue a certificate  ==="
-y_e "=== from there. Thanks to Neilpang's work, we issue a certificate from Let's easily by his tool--acme.sh. Thanks a lot ==="
-y_e "=== here I use this tool to issue a certificate for your domain, and I use dns api to do this because it's convenient  ==="
-y_e "=== This mode need you to export the api of your dns server in a spical form as an environmet varabile. And the dnsapi ==="
-y_e "=== can be found in your dns server, then you should export them in a special form and enter the correspond infomation ==="
-y_e "=== we will check whether you do this correctly, if not, the script will stop and quit. But this dosen't mean that you ==="
-y_e "=== can not use this script to depoly the mirror, it just means you need to choose 'no' below and issue a certificate. ==="
-y_e "=== For how to do, please visit https://github.com/Neilpang/acme.sh/tree/master/dnsapi for details and do it yourself. ==="
-y_e "=========================================================================================================================="
+b_e "[-] configure a certificate for the domain"
+read -p "please enter a sub-domain to configure ssl certificate for mirror(like a.abc.com)." domain
+if [ -s ${ngx_loc}/conf/vhosts/${domain}.conf ]; then
+	r_e "The domain exist, exit"
+	exit 1
+fi
+r_e "=========================================================================================================================="
+r_e "=== In oreder to run the mirror correctly, you must use https scheme for your domain, hence you need a ssl certificate ==="
+r_e "=== Let's encrypt can provide you a free certificate with wildcard support. so I recommend you to issue a certificate  ==="
+r_e "=== from there. Thanks to Neilpang's work, we issue a certificate from Let's easily by his tool--acme.sh. Thanks a lot ==="
+r_e "=== here I use this tool to issue a certificate for your domain, and I use dns api to do this because it's convenient  ==="
+r_e "=== This mode need you to export the api of your dns server in a spical form as an environmet varabile. And the dnsapi ==="
+r_e "=== can be found in your dns server, then you should export them in a special form and enter the correspond infomation ==="
+r_e "=== we will check whether you do this correctly, if not, the script will stop and quit. But this dosen't mean that you ==="
+r_e "=== can not use this script to depoly the mirror, it just means you need to choose 'no' below and issue a certificate. ==="
+r_e "=== For how to do, please visit https://github.com/Neilpang/acme.sh/tree/master/dnsapi for details and do it yourself. ==="
+r_e "=========================================================================================================================="
 read -p "install acme.sh?[y/n]" ins_acm
 case "${ins_acm}" in
 	[yY][eE][sS]|[yY])
 		r_e "please make sure you have read the infomation above already before continue"
 		read -p "enter your dns server(like dns_dp):" dns_server
 		read -p "enter the dns api in the some form as you do before(like, DP_Id, DP_Key)" dns_id dns_key
-		if [[ -z "${dns_id}" &&  -z "${dns_key}" ]]; then
-			r_e "you must input both infomation of dns api"
+		if [[ "${dns_server}" = "" ||  "${dns_id}" = ""  || "${dns_key}" = ""  ]]; then
+			r_e "none of infomation of dns api can leave as blank, please specify them correctly."
 			exit 1
 		else
 			if env | grep -Eqi "$dns_id" && env | grep -Eqi "$dns_key" ; then
-				cd /usr/src
-				if [ ! -d acme ]; then
-					git clone https://github.com/Neilpang/acme.sh.git acme 
+				if [ ! -d /usr/local/acme ]; then
+					cd /usr/src
+					git clone https://github.com/Neilpang/acme.sh.git acme
 					cd acme
-				else
-					cd acme
-				fi
-				read -p "please enter the location you want to install for acme.sh:" ac_home
-				read -p "please enter the configuration location for acme.sh:" cfg_home
-				read -p "please enter the certshome for store issued certs:" cts_home
-				if [[ "${ac_home}"="" || "${cfg_home}"="" ||  "${cts_home}"="" ]]; then
 					./acme.sh --install --home /usr/local/acme --cert-home /usr/local/acme/certs --config-home /usr/local/acme/config
-				else
-					./acme.sh --install --home ${ac_home} --cert-home ${cts_home} --config-home ${cfg_home}
+					cd .. && rm -rf acme
 				fi
-				read -p "enter a sub-domain you want to issue a certificate(like a.abc.com):" domain
 				if [[ -s /usr/local/acme/certs/${domain} ]]; then
-					r_e "=========================================================================================="
-					r_e "=== The domain you input here has a certificate, it'll will not be issued, but will be ==="
-					r_e "=== used as in .conf file of nginx virtual which use to server as mirror's web server. ==="
-					r_e "=========================================================================================="
+					g_e "=========================================================================================="
+					g_e "=== The domain you input here has a certificate, it'll will not be issued, but will be ==="
+					g_e "=== used as in .conf file of nginx virtual which use to server as mirror's web server. ==="
+					g_e "=========================================================================================="
 				else
-					if [[ "${dns_server}" = "" ]]; then 
-						r_e "you don't specify your dns server, it can not issue a certificate for your domain."
-						exit 1
-					fi
-					if [[ "${ac_home}" != "" && "${ac_home}" != "/usr/local/acme" ]]; then
-						${ac_home}/acme.sh --issue  --dns ${dns_server} -d ${domain}
-					else
 						/usr/local/acme/acme.sh --issue  --dns ${dns_server} -d ${domain}
-					fi
+						if [ $? -ne 0 ]; then
+							r_e "problem occurs when issue a certicate, exit."
+							exit 1
+						fi
 				fi
 			else
-				r_e "sorry, you don't specify the infomation of dns  api as decribed above, exit"
+				r_e "the infomation of dns api you specify was not found in environment varavile "
 				exit 1
 			fi
 		fi
@@ -185,24 +169,29 @@ case "${ins_acm}" in
 		y_e "=== You don't choose to install acme.sh, it may mean you have instated it before or has a issue already. ==="
 		y_e "=== in order to run the mirror service here, we need you to provide the infomation of certificate below. ==="
 		y_e "============================================================================================================"
-		read -p "please input a sub-domain for your mirror(like a.abc.com):" domain
 		read -p "please input the full location of your public key(like /home/www/mypub.pem):" pub_key
 		read -p "please input the full location of your private key(like /home/www/mypub.pem):" priv_key
-		if [[ "${pub_key}"="" || "${priv_key}"="" ]]; then
+		if [[ "${pub_key}" = "" || "${priv_key}" = "" ]]; then
 			r_e "none of the public key or private key can be blank, you must specify both of them!"
-			exit 1	
+			exit 1
+		elif [[ ! -s "${pub_key}" && ! -s "${priv_key}" ]]; then
+			r_e "the certifcate you specify is not found, please make suere you has enter a right location."
+			exit 1
+		else
+			g_e "ok, this is certificate will be used later."
 		fi
 	;;
         *)
-                y_e "========================================================================================================"
-		y_e "=== You don't do any choose,the default is not to installed, please make sure yo have a certificate. ==="
-                y_e "========================================================================================================"
-                ins_acm="n"
+                r_e "========================================================================================================"
+		r_e "=== You don't do any choose or enter wrong choice, I don't know your mean, so script will be stoped. ==="
+		r_e "=== It needs a ssl certificate to make the mirror work correctly. Please make a correct chociceabove ==="
+                r_e "========================================================================================================"
+		exit 1
 esac
 
 b_e "[-] mkdir for your website"
-	if [ ! -d "/home/${ngx_user}/site/${domain}" ]; then
-        	mkdir -p /home/${ngx_user}/site/${domain} 
+	if [ ! -d "/home/www/site/${domain}" ]; then
+        	mkdir -p /home/www/site/${domain} 
 	else
 		g_e "home exist, nothing to do."
 	fi
@@ -212,22 +201,24 @@ b_e "[-] mkdir for your website"
 	y_e "=== we will use site name as the directory name, and it's located under the domain home of home of nginx user. ==="
 	y_e "=================================================================================================================="
 	
-	y_e "======================================================================================================"
-        y_e "=== Enter a port number here to listen mirror server called gunicorn, which works in the your vps. ==="
-        y_e "=== please do not enter number like 80,443,3306 etc. which is used by other program. If you depoly ==="
-	y_e "=== multi mirrors on the same vps, be caution not to use a same number for each mirror which maybe ==="
-	y_e "=== if you do not enter a number, port 8964 will be used by default, it's not a good idea for you. ==="
-        y_e "=== Besides, do not forget to allow  this port in firewall rules(i.e. iptables, firewalld selinux) ==="
-        y_e "======================================================================================================"
+	r_e "======================================================================================================"
+        r_e "=== Enter a port number here to listen mirror server called gunicorn, which works in the your vps. ==="
+        r_e "=== please do not enter number like 80,443,3306 etc. which is used by other program. If you depoly ==="
+	r_e "=== multi mirrors on the vps, please remember to use different port for each mirror. If you do not ==="
+	r_e "=== enter a number, script will be stop. Don't forget to allow this port(s) in the firewall rules. ==="
+        r_e "======================================================================================================"
         read -p "please enter a port to listen zmirror server:" port
         if [[ "${port}" = "" ]]; then
-                port="8964"
-        fi
+                r_e "port not specify, exit."
+		exit 1
+        elif netstat -ltnp | grep -Eqi "$port"; then
+		r_e "the port you specify has been used, exit."
+		exit 1
+	fi
 	sites=("archive_org" "dropbox" "duckduckgo" "economist" "facebook" "google_and_zhwikipedia" "instagram" "thepiratebay" "thumblr" "twitter_mobile" "twitter_pc" "youtube" "youtube_mobile")
 	y_e "=========================================="
 	y_e "plase choose one site from list below"
 	y_e "the sites below you can choose to install."
-	y_e "default site is google and zhwikipedia"
 	y_e "1: ${sites[0]}"
 	y_e "2: ${sites[1]}"
 	y_e "3: ${sites[2]}"
@@ -283,8 +274,8 @@ b_e "[-] mkdir for your website"
 			r_e "sorry, sorry no mirror you specify, exit!"
 			exit 1
 	esac
-        cd /home/${ngx_user}/site/${domain}
-	if [ -d "/home/${ngx_user}/site/${domain}/${site}" ]; then
+        cd /home/www/site/${domain}
+	if [ -d "/home/www/site/${domain}/${site}" ]; then
 		r_e "The site you specified has been installed already, nothing to do."
 		exit 1
 	else
@@ -303,8 +294,8 @@ b_e "[-] mkdir for your website"
 			After=network.target
 			[Service]
 			Restart=On-ailure
-			WorkingDirectory=/home/${ngx_user}/site/${domain}/${site}
-			ExecStart=/home/${ngx_user}/site/${domain}/${site}/venv/bin/gunicorn --log-file zmirror_${site}.log --access-logfile zmirror_access_${site}.log --bind 127.0.0.1:${port} --workers 2 --worker-connections 100 wsgi:application
+			WorkingDirectory=/home/www/site/${domain}/${site}
+			ExecStart=/home/www/site/${domain}/${site}/venv/bin/gunicorn --log-file zmirror_${site}.log --access-logfile zmirror_access_${site}.log --bind 127.0.0.1:${port} --workers 2 --worker-connections 100 wsgi:application
 			[Install]
 			WantedBy=multi-user.target
 EOF
@@ -314,12 +305,8 @@ EOF
 
 ## intall certificate and configure nginx vitrual conf
 if [[ -d /usr/local/acme/certs/${domain} ]]; then
-	mkdir -p /home/${ngx_user}/ssl/${domain}
-	if [[ "${ac_home}" != "" && "${ac_home}" != "/usr/local/acme" ]];  then
-	                ${ac_home}/acme.sh --install-cert -d ${domain} --fullchain-file /home/${ngx_user}/ssl/${domain}/pubkey.pem --key-file /home/${ngx_user}/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
-	else
-		/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/${ngx_user}/ssl/${domain}/pubkey.pem --key-file /home/${ngx_user}/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
-	fi
+	mkdir -p /home/www/ssl/${domain}
+	/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
 	cat>${ngx_loc}/conf/vhosts/${domain}.conf<<EOF
 		server{
         		listen          80;
@@ -338,8 +325,8 @@ if [[ -d /usr/local/acme/certs/${domain} ]]; then
         			access_log     logs/${domain}.log;
         			add_header      Strict-Transport-Security "max-age=15552000;";
         			ssl             on;
-        			ssl_certificate /home/${ngx_user}/ssl/${domain}/pubkey.pem;
-        			ssl_certificate_key /home/${ngx_user}/ssl/${domain}/privkey.pem;
+        			ssl_certificate /home/www/ssl/${domain}/pubkey.pem;
+        			ssl_certificate_key /home/www/ssl/${domain}/privkey.pem;
         			ssl_ciphers     ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:HIGH:SEED:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!RSAPSK:!aDH:!aECDH:!EDH-DSS-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA:!SRP;
         			ssl_prefer_server_ciphers on;
         			ssl_protocols           TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
@@ -378,5 +365,6 @@ else
 		}
 EOF
 fi
+chown -R www:www /home/www/site
 service nginx relaod
-
+fi

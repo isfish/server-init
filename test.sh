@@ -1,11 +1,10 @@
 #!/bin/bash
-tests="home"
+tests="8964"
 remote="paths"
-if env | grep -i "$tests" && env | grep -i "$remote"; then 
+if netstat -ltnp | grep -Eqi ":$tests"; then 
 	echo "true"
 else
 	echo "false"
 fi
 
-remote="555555"
 
