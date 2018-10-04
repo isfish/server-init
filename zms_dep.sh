@@ -317,7 +317,7 @@ if [ -d /usr/local/acme/certs/${domain} ]; then
 		server{
         		listen          80;
         		server_name     ${domain};
-        		rewrite         ^(.*)$ https://\${server_name}\$1' permanent;
+        		rewrite         ^(.*)$ https://\${server_name}\$1 permanent;
 		}	
 		server{
         		listen          443 ssl;
@@ -345,7 +345,7 @@ elif [[ "${pub_key}" = "" && "{priv_key}" = "" ]]; then
 		server{
 			listen          80;
 			server_name     ${domain};
-			rewrite         ^(.*)$ https://\${server_name}\$1' permanent;
+			rewrite         ^(.*)$ https://\${server_name}\$1 permanent;
                 }
 
                 server{
