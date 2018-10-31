@@ -3,8 +3,9 @@
 # Version: 1.0
 # Date: 2018-10-23
 
-
-# Whether the script is run by root
+#------------------------------------------------------------------------
+ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+ export PATH
  R_E(){
 	echo -e "\e[1;31m$1\e[0m"
  }
