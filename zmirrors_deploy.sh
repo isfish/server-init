@@ -58,7 +58,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 			/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
 		fi
  fi
- sites=("archive" "dropbox" "duckduckgo" "economist" "facebook" "google" "instagram" "thepiratebay" "thumblr" "twitterm" "twitterpc" "y2b" "y2bm")
+ sites=("archive_org" "dropbox" "duckduckgo" "economist" "facebook" "google_and_zhwikipedia" "instagram" "thepiratebay" "thumblr" "twitter_moblie" "twitter_pc" "youtube" "youtube_moblie")
  Y_E "=========================================="
  Y_E "plase choose one site from list below"
  Y_E "the sites below you can choose to install."
@@ -74,6 +74,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
  Y_E "10: ${sites[9]}"
  Y_E "11: ${sites[10]}"
  Y_E "12: ${sites[11]}"
+ Y_E "13: ${sites[12]}"
  Y_E "=========================================="
  read -p "please enter which mirror you want to install:" site
  case "${site}" in
@@ -112,6 +113,9 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
     ;;
 	12) 
 		site=${sites[11]}
+    ;;
+    	13) 
+		site=${sites[12]}
     ;;
 	*)
 		r_e "sorry, sorry no mirror you specify, exit!"
