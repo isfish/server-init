@@ -51,10 +51,11 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 			R_E "None of infomation of dns api can leave as blank, please specify them correctly."
 			exit 1
 		else
-			eval export "${dns_server}=${dns_id}"
-			eval export "${dns_server}=${dns_key}"
-		/usr/local/acme/acme.sh --issue --dns ${dns_server} -d ${domain}
-		/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
+			export ${dns_id}
+			export ${dns_key}
+			mkdir -p /home/www/ssl/${domain}
+			/usr/local/acme/acme.sh --issue --dns ${dns_server} -d ${domain}
+			/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
 		fi
  fi
  sites=("archive" "dropbox" "duckduckgo" "economist" "facebook" "google" "instagram" "thepiratebay" "thumblr" "twitterm" "twitterpc" "y2b" "y2bm")
