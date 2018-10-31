@@ -24,13 +24,14 @@
 	R_E "Sorry, this script must run by root. Please change to root to run this script!"
 	exit 1
  fi
- Y_E "[+] Install new kernel..."
+ B_E "[+] Install new kernel..."
+ sed -i 's/SELINUX=./SELINUX=dsiabled/g' /etc/selinux/config
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
  yum -y --enablerepo=elrepo-kernel install kernel-ml
  grub2-set-default 0
- echo 'net.core.default_qdisc=fq' | sudo tee -a /etc/sysctl.conf
- echo 'net.ipv4.tcp_congestion_control=bbr' | sudo tee -a /etc/sysctl.conf
+ echo 'net.core.default_qdisc=fq'
+ echo 'net.ipv4.tcp_congestion_control=bbr'
  sysctl -p
  yum install -y epel-release
  yum install -y https://centos7.iuscommunity.org/ius-release.rpm
@@ -118,36 +119,36 @@ events {
 	worker_connections  1024;
 }		
 http {
-	include				mime.types;
-    default_type		application/octet-stream;
-    server_tokens		off;
-    charset				UTF-8;
-    sendfile			on;
-    tcp_nopush			on;
-    tcp_nodelay			on;
-    keepalive_timeout	60;
-    brotli				on;			
-    brotli_static 		on;
-    brotli_comp_level 	6;
-    brotli_buffers		32 8k;
-    gzip				on;
-    gzip_vary			on;
-    gzip_comp_level		6;
-    gzip_buffers		16 8k;
-    gzip_min_length		1000;
-    gzip_proxied		any;
-   	gzip_disable		"msie6";
-    gzip_http_version	1.0;
-    gzip_types			text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
-    include				vhosts/*.conf;
+	include			mime.types;
+	default_type		application/octet-stream;
+	server_tokens		off;
+	charset			UTF-8;
+	sendfile		on;
+	tcp_nopush		on;
+	tcp_nodelay		on;
+	keepalive_timeout	60;
+	brotli			on;			
+	brotli_static 		on;
+	brotli_comp_level	6;
+	brotli_buffers		32 8k;
+	gzip			on;
+	gzip_vary		on;
+	gzip_comp_level		6;
+	gzip_buffers		16 8k;
+	gzip_min_length		1000;
+	gzip_proxied		any;
+	gzip_disable		"msie6";
+	gzip_http_version	1.0;
+	gzip_type		text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
+	include			vhosts/*.conf;
 }
 EOF
 	cat>${ngx_loc}/conf/vhosts/default.conf<<EOF
 server{
 		listen          80;
 		server_name     localhost;
-		root			html;
-		index			index.html;
+		root		html;
+		index		index.html;
 }
 
 EOF
@@ -184,7 +185,7 @@ EOF
  else
  	git clone https://github.com/Neilpang/acme.sh.git
  	cd acme.sh
- 	./acme.sh --install --home=${ac_loc} --cert-home=${ac_loc}/certs --config-home=${ac_loc}/config
+ 	./acme.sh --install --home ${ac_loc} --cert-home ${ac_loc}/certs --config-home ${ac_loc}/config
  fi
  	reboot
 
