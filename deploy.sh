@@ -28,7 +28,7 @@
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
  yum -y --enablerepo=elrepo-kernel install kernel-ml
- grub2-set-default 1
+ grub2-set-default 0
  echo 'net.core.default_qdisc=fq' | sudo tee -a /etc/sysctl.conf
  echo 'net.ipv4.tcp_congestion_control=bbr' | sudo tee -a /etc/sysctl.conf
  sysctl -p
@@ -45,6 +45,7 @@
  fi
  if [ -s /usr/local/nginx/conf/nginx.conf ]; then
  	G_E "nginx has been installed, nothing to do."
+	exit 1
  else
  	cd ${wk_dir}
  	wget https://nginx.org/download/nginx-1.15.5.tar.gz
