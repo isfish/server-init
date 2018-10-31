@@ -7,4 +7,4 @@ A repository for learing program.
 ## what doese it for?
 
 学习而已
-just for learing!
+just for learning!
