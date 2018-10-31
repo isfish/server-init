@@ -127,8 +127,8 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 		cd ${site}
 		python3.6 -m pip install virtualenv setuptools==21
 		virtualenv -p python3.6 venv
-		./venv/bin/pip install -i https://pypi.douban.com/simple gunicorn gevent
-		./venv/bin/pip install -i https://pypi.douban.com/simple -r requirements.txt
+		./venv/bin/pip install gunicorn gevent
+		./venv/bin/pip install -r requirements.txt
 		cp more_configs/config_${site}.py config.py
 		sed -i "s#my_host_name = '127.0.0.1'#my_host_name = '${domain}'#g" config.py
 		sed -i "s#my_host_scheme = 'http://'#my_host_scheme = 'https://'#g" config.py
