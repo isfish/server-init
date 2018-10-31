@@ -83,6 +83,7 @@
  	--with-file-aio \
  	--with-pcre-jit \
  	--with-stream \
+	ngx_http_ssl_module \
  	--with-stream_ssl_module \
  	--with-stream_realip_module \
  	--with-stream_ssl_preread_module \
