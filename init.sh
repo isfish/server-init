@@ -141,7 +141,7 @@ http {
 	gzip_proxied		any;
 	gzip_disable		"msie6";
 	gzip_http_version	1.0;
-	gzip_type		text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
+	gzip_types		text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
 	include			vhosts/*.conf;
 }
 EOF
