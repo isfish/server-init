@@ -53,7 +53,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 		else
 			eval export "${dns_server}=${dns_id}"
 			eval export "${dns_server}=${dns_key}"
-		/usr/local/amce/acme.sh --issue --dns ${dns_server} -d ${domain}
+		/usr/local/acme/acme.sh --issue --dns ${dns_server} -d ${domain}
 		/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
 		fi
  fi
@@ -121,7 +121,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 		exit 1
 	else
 		mkdir -p /home/www/site/${domain}
-        cd /home/www/site/${domain}
+        	cd /home/www/site/${domain}
 		git clone https://github.com/aploium/zmirror.git ${site}
 		cd ${site}
 		python3.6 -m pip install virtualenv setuptools==21
