@@ -174,6 +174,8 @@ EOF
  	systemctl enable nginx 
  	systemctl start nginx
  fi
+ firewall-cmd --zone=public --add-service=http --permanent 
+ firewall-cmd --zone=public --add-service=https --permanent
 
  # install acme.sh to get certificate
  cd ${wk_dir}
