@@ -58,7 +58,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 			/usr/local/acme/acme.sh --install-cert -d ${domain} --fullchain-file /home/www/ssl/${domain}/pubkey.pem --key-file /home/www/ssl/${domain}/privkey.pem --reloadcmd "service nginx force-reload"
 		fi
  fi
- sites=("archive_org" "dropbox" "duckduckgo" "economist" "facebook" "google_and_zhwikipedia" "instagram" "thepiratebay" "thumblr" "twitter_moblie" "twitter_pc" "youtube" "youtube_moblie")
+ sites=("archive_org" "dropbox" "duckduckgo" "economist" "facebook" "google_and_zhwikipedia" "instagram" "thepiratebay" "thumblr" "twitter_mobile" "twitter_pc" "youtube" "youtube_mobile")
  Y_E "=========================================="
  Y_E "plase choose one site from list below"
  Y_E "the sites below you can choose to install."
@@ -121,14 +121,23 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 		r_e "sorry, sorry no mirror you specify, exit!"
 		exit 1
 	esac
+	read -p "Specify port for mirror(like,8000):" port
+	if [ "${port}" = " " ]; then
+		R_E "Port no specify, exit"
+		exit 1
+	elif [ `lsof -i:${port}` ]; then
+		if [ "$?" = 0 ]; then
+			R_E "Port exist,exit"
+		fi
+	fi
+		
 	if [ -d /home/www/site/${domain} ]; then
 		R_E "The domain exist, exit!"
 		exit 1
 	else
-		mkdir -p /home/www/site/${domain}
-        	cd /home/www/site/${domain}
-		git clone https://github.com/aploium/zmirror.git ${site}
-		cd ${site}
+        	cd /home/www/site/
+		git clone https://github.com/aploium/zmirror.git ${domain}
+		cd ${domain}
 		python3.6 -m pip install virtualenv setuptools==21
 		virtualenv -p python3.6 venv
 		./venv/bin/pip install gunicorn gevent
@@ -169,7 +178,6 @@ server{
         }
         access_log     logs/${domain}.log;
         add_header      Strict-Transport-Security "max-age=15552000;";
-        ssl             on;
         ssl_certificate /home/www/ssl/${domain}/pubkey.pem;
         ssl_certificate_key /home/www/ssl/${domain}/privkey.pem;
         ssl_ciphers     ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:HIGH:SEED:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!RSAPSK:!aDH:!aECDH:!EDH-DSS-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA:!SRP;
