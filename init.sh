@@ -37,7 +37,7 @@
  yum install -y epel-release
  yum install -y https://centos7.iuscommunity.org/ius-release.rpm
  yum makecache
- yum install -y gcc curl gcc-c++ kmod-nvidia-410.73-2.el7_6.elrepo.x86_64.rpm git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel
+ yum install -y gcc curl gcc-c++ kmod-nvidia-410.73-2.el7_6.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel
 
  # Download software
  if grep -Eqi "www" /etc/passwd; then
