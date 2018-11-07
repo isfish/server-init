@@ -108,6 +108,7 @@
  	--with-openssl=../openssl-1.1.1 \
  	--add-module=../ngx_brotli \
  	--add-module=../nginx-sorted-querystring-module \
+	--with-openssl-opt='enable-tls1_3 enable-weak-ssl-ciphers' \
  	--add-module=../ngx_http_substitutions_filter_module 
  	make
  	make install
@@ -189,6 +190,7 @@ EOF
  	cd acme.sh
  	./acme.sh --install --home ${ac_loc} --cert-home ${ac_loc}/certs --config-home ${ac_loc}/config
  fi
+ 	rm -rf /usr/src/ng* /usr/src/op* /usr/src/ac*
  	reboot
 
 
