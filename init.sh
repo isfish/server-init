@@ -30,14 +30,22 @@
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
  yum -y --enablerepo=elrepo-kernel install kernel-ml
- grub2-set-default 0
+ egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \'
+ read -p "Please specify the number before kernel: " kenNum 
+ if [ "${kenNum}"="" || ]; then 
+ 	R_E "Please input the kernel number above."
+	exit 1
+ else
+ 	grub2-set-default ${kenNum}
+ fi
  echo 'net.core.default_qdisc=fq'
  echo 'net.ipv4.tcp_congestion_control=bbr'
  sysctl -p
  yum install -y epel-release
  yum install -y https://centos7.iuscommunity.org/ius-release.rpm
  yum makecache
- yum install -y gcc curl gcc-c++ kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel
+ # kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64
+ yum install -y wget bzip2 gcc curl gcc-c++  git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel
 
  # Download software
  if grep -Eqi "www" /etc/passwd; then
@@ -50,9 +58,9 @@
 	exit 1
  else
  	cd ${wk_dir}
- 	wget https://nginx.org/download/nginx-1.15.5.tar.gz
+ 	wget http://nginx.org/download/nginx-1.15.6.tar.gz
  	wget https://www.openssl.org/source/openssl-1.1.1.tar.gz
- 	tar zxf nginx-1.15.5.tar.gz
+ 	tar zxf nginx-1.15.6.tar.gz
  	tar zxf openssl-1.1.1.tar.gz
  	curl https://raw.githubusercontent.com/kn007/patch/43f2d869b209756b442cfbfa861d653d993f16fe/nginx.patch >> nginx.patch
  	curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/nginx_strict-sni.patch >> nginx_strict-sni.patch
@@ -66,7 +74,7 @@
  	cd ../openssl-1.1.1
  	patch -p1 < ../openssl-equal-1.1.1_ciphers.patch
  	patch -p1 < ../openssl-1.1.1-chacha_draft.patch
- 	cd ../nginx-1.15.5
+ 	cd ../nginx-1.15.6
  	patch -p1 < ../nginx.patch
  	patch -p1 < ../nginx_strict-sni.patch
  	mkdir -p ${ngx_loc}/temp
@@ -178,6 +186,7 @@ EOF
  	systemctl enable nginx 
  	systemctl start nginx
  fi
+ service firewalld start
  firewall-cmd --zone=public --add-service=http --permanent 
  firewall-cmd --zone=public --add-service=https --permanent
 
