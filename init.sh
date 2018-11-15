@@ -32,20 +32,14 @@
  yum -y --enablerepo=elrepo-kernel install kernel-ml
  egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \'
  read -p "Please specify the number before kernel: " kenNum 
- if [ "${kenNum}"="" || ]; then 
- 	R_E "Please input the kernel number above."
-	exit 1
- else
- 	grub2-set-default ${kenNum}
- fi
+ grub2-set-default ${kenNum}
  echo 'net.core.default_qdisc=fq'
  echo 'net.ipv4.tcp_congestion_control=bbr'
  sysctl -p
  yum install -y epel-release
  yum install -y https://centos7.iuscommunity.org/ius-release.rpm
  yum makecache
- # kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64
- yum install -y wget bzip2 gcc curl gcc-c++  git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel
+ yum install -y wget bzip2 gcc curl gcc-c++  kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel
 
  # Download software
  if grep -Eqi "www" /etc/passwd; then
