@@ -47,7 +47,7 @@
  fi
  B_E "[+] Install new kernel..."
  # In some old 7.x system, run yum update first to make sure work done correctly.
- yum update
+ yum -y update
  sed -i 's/SELINUX=./SELINUX=dsiabled/g' /etc/selinux/config
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
