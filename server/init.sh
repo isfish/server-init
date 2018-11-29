@@ -61,8 +61,8 @@
  else
  	grub2-set-default ${kenNum}
  fi
- echo 'net.core.default_qdisc=fq'  /etc/sysctl.conf
- echo 'net.ipv4.tcp_congestion_control=bbr'  /etc/sysctl.conf
+ echo 'net.core.default_qdisc=fq'>>/etc/sysctl.conf
+ echo 'net.ipv4.tcp_congestion_control=bbr' >>/etc/sysctl.conf
  sysctl -p
  
  # Using the third party yum source to install new and stable softwares.
@@ -239,7 +239,9 @@ EOF
  	./acme.sh --install --home ${ac_loc} --cert-home ${ac_loc}/certs --config-home ${ac_loc}/config
  fi
  	rm -rf /usr/src/ng* /usr/src/op* /usr/src/ac*
+	2>&1 | tee -a /root/init.log
  	reboot
+	
 
 
 
