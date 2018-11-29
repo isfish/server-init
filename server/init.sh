@@ -62,7 +62,7 @@
  	grub2-set-default ${kenNum}
  fi
  echo 'net.core.default_qdisc=fq'>>/etc/sysctl.conf
- echo 'net.ipv4.tcp_congestion_control=bbr' >>/etc/sysctl.conf
+ echo 'net.ipv4.tcp_congestion_control=bbr'>>/etc/sysctl.conf
  sysctl -p
  
  # Using the third party yum source to install new and stable softwares.
@@ -70,7 +70,7 @@
  yum install -y epel-release
  yum install -y https://centos7.iuscommunity.org/ius-release.rpm
  yum makecache
- packs="wget curl bzip2 libatomic_ops-devel gcc gcc-c gcc-c++ kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel"
+ packs="wget curl bzip2 libatomic_ops-devel gcc* kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel"
  for pack in $packs
  	do 
 		yum install -y $pack
@@ -239,7 +239,6 @@ EOF
  	./acme.sh --install --home ${ac_loc} --cert-home ${ac_loc}/certs --config-home ${ac_loc}/config
  fi
  	rm -rf /usr/src/ng* /usr/src/op* /usr/src/ac*
-	2>&1 | tee -a /root/init.log
  	reboot
 	
 
