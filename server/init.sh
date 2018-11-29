@@ -41,7 +41,7 @@
  yum -y --enablerepo=elrepo-kernel install kernel-ml
  egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \'
  read -p "Please specify the number before kernel: " kenNum
- if [ "${kenNum}"=" " ]; then
+ if [ -z ${kenNum} ]; then
 	 R_E "Please input the number of kernel version above 4.x!"
  else
  	grub2-set-default ${kenNum}
