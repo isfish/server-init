@@ -1,64 +1,89 @@
 #! /bin/bash
-# Description: This is a script to depoly some tools
-# Version: 
-# 1.0 at 2018-10-23
-# 2.0 at 2018-11-16
-# Date: 2018-11-16(Modified)
+# Description: Using this Script to install softwares in a new Virtual Peasonal Server(VPS)
+# Author: isfish
+# Version:  2.1
+# Date: 
+#	2018-10-23(Created)
+#	2018-11-16(Modified, new version)
 # Revision: 
-# v1.0
-# v2.0
+#	v1.0 at 2018-10-23: Create the script 
+# 	v2.0 at 2018-11-16: Rebulid and rewrite the script
+#	v2.1 at 2018-11-29: fix some misspells and logic errors
+##########################################################################################
 
-#---------------------Begin the codes-----------------------------------
+#---------------------Begin the codes-----------------------------------#
 
-# Define the path variable
+# Define and export the system variable
  PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
  export PATH
+ 
 # Define the color of hints
+# Waring
  R_E(){
 	echo -e "\e[1;31m$1\e[0m"
  }
+ # Done
  G_E(){
 	echo -e "\e[1;32m$1\e[0m"
  }
+ # Hints
  Y_E(){
 	echo -e "\e[1;33m$1\e[0m"
  }
+ # Working
  B_E(){
 	echo -e "\e[1;34m$1\e[0m"
  }
+ 
 # Define the locations
  wk_dir="/usr/src"
  ngx_loc="/usr/local/nginx"
  ac_loc="/usr/local/acme"
+ 
+ # Run this script as root
  if [ $(id -u) != "0" ]; then
 	R_E "Sorry, this script must run by root. Please change to root to run this script!"
 	exit 1
  fi
  B_E "[+] Install new kernel..."
+ # In some old 7.x system, run yum update first to make sure work done correctly.
+ yum update
  sed -i 's/SELINUX=./SELINUX=dsiabled/g' /etc/selinux/config
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
  yum -y --enablerepo=elrepo-kernel install kernel-ml
  egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \'
- read -p "Please specify the number before kernel: " kenNum
+ read -p "Please specify 4.x kernel using number start from 0: " kenNum
+ 
+ # Replace the 3.x kernel with 4.x
  if [ -z ${kenNum} ]; then
-	 R_E "Please input the number of kernel version above 4.x!"
+	 R_E "Please input choice with a number only!"
  else
  	grub2-set-default ${kenNum}
  fi
- echo 'net.core.default_qdisc=fq'
- echo 'net.ipv4.tcp_congestion_control=bbr'
+ echo 'net.core.default_qdisc=fq'  /etc/sysctl.conf
+ echo 'net.ipv4.tcp_congestion_control=bbr'  /etc/sysctl.conf
  sysctl -p
+ 
+ # Using the third party yum source to install new and stable softwares.
+ B_E "[+] Download softwares..."
  yum install -y epel-release
  yum install -y https://centos7.iuscommunity.org/ius-release.rpm
- B_E "[+] Download softwares..."
  yum makecache
- yum install -y wget curl bzip2 gcc gcc-c gcc-c++ kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel libatomic_ops-devel
+ packs="wget curl bzip2 libatomic_ops-devel gcc gcc-c gcc-c++ kmod-nvidia-340xx-340.107-1.el7_5.elrepo.x86_64 git2u python36u python36u-devel python36u-pip patch net-tools lsof vim zlib zlib-devel  pcre pcre-devel zip unzip google-perftools google-perftools-devel GeoIP-devel gd gd-devel"
+ for pack in $packs
+ 	do 
+		yum install -y $pack
+	done
+	
+ # Add www to master nginx service
  if grep -Eqi "www" /etc/passwd; then
  	G_E "www has been added."
  else
  	useradd  -s /sbin/nologin www
  fi
+ 
+ # Install and configure nginx
  if [ -s /usr/local/nginx/conf/nginx.conf ]; then
  	G_E "nginx has been installed, nothing to do."
 	exit 1
@@ -203,6 +228,7 @@ EOF
  mkdir -p /home/www/site
  mkdir -p /home/www/ssl
  chown -R www:www /home/www
+ 
  # install acme.sh to get certificate
  cd ${wk_dir}
  if [ -d ${ac_loc} ]; then
