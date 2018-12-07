@@ -178,6 +178,7 @@ http {
 	brotli_comp_level	6;
 	brotli_buffers		32 8k;
 	brotli_types		application/javascript application/atom+xml application/rss+xml application/json application/xhtml+xml font/woff font/woff2 image/gif image/jpeg image/png image/svg+xml image/webp image/x-icon image/x-ms-bmp text/css text/x-component text/xml text/plain;
+	ssl_early_data		on;
 	gzip			on;
 	gzip_vary		on;
 	gzip_comp_level		6;
