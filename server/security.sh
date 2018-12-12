@@ -2,11 +2,9 @@
 # Description: This script is used to change default SSH port, add a new user in wheel group(give this user sudo permission), prohibit login by passwd and root from remote login 
 # Author: isfish
 # Version: 1.0
-# Date: 2018-11-30
 # Reversion:
 #	v1.0 at 2018-11-30 for first time release
-#################################################################################################################################################################################
-
+################################################################################
 
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin

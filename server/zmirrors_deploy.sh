@@ -1,7 +1,9 @@
 #! /bin/bash
 # Description: This script is used to deploy zmirrors
-# Version: 2.0(rewrite from zms_dep.sh)
-# Date: 2018-10-31
+# Version: v2.1(rewrite from zms_dep.sh)
+# Reversion:
+#	v2.1 at 2018-12-12 create the unified preamble
+########################################################################
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
  R_E(){

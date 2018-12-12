@@ -2,9 +2,6 @@
 # Description: Using this Script to install softwares in a new Virtual Peasonal Server(VPS)
 # Author: isfish
 # Version:  2.1
-# Date: 
-#	2018-10-23(Created)
-#	2018-11-16(Modified, new version)
 # Revision: 
 #	v1.0 at 2018-10-23: Create the script 
 # 	v2.0 at 2018-11-16: Rebulid and rewrite the script
