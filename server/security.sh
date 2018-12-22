@@ -45,18 +45,26 @@ export PATH
  	service sshd reload
  	G_E "Ok, the SSH has been modified successfully"
  fi
- B_E "Disable some choice"
- sed -i "s/#PermitRootLogin yes/PermitRootLogin no/g" /etc/ssh/sshd_config
+ B_E "Disable some potential sercurity problems"
+ if grep -Eqi "#PermitRootLogin yes" /etc/ssh/sshd_config ; then
+	 sed -i "s/#PermitRootLogin yes/PermitRootLogin no/g" /etc/ssh/sshd_config
+ elif grep -Eqi "PermitRootLogin yes" /etc/ssh/sshd_config ; then
+	 sed -i "s/PermitRootLogin yes/PermitRootLogin no/g" /etc/ssh/sshd_config
+ fi
+ if grep -Eqi "#PubkeyAuthentication no" /etc/ssh/sshd_config ; then
+	 sed -i "s/#PubkeyAuthentication no/PublicKeyLogin yes/g" /etc/ssh/sshd_config
+ elif grep -Eqi "PubkeyAuthentication no" /etc/ssh/sshd_config ; then
+	 sed -i "s/#PubkeyAuthentication no/PublicKeyLogin yes/g" /etc/ssh/sshd_config
+ fi
  sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/g" /etc/ssh/sshd_config
- sed -i "s/#PubkeyAuthentication no/PublicKeyLogin yes/g" /etc/ssh/sshd_config
  sed -i "s/#MaxAuthTries 6/MaxAuthTries 3/g" /etc/ssh/sshd_config
  sed -i "s/#MaxSessions 10/MaxSessions 3/g" /etc/ssh/sshd_config
- read -p "Please enter the username your want to add(like mike): " userName
+ read -p "Create a user and add it as a superuser, please enter username(like mike): " userName
  if [ -z "$userName" ]; then
 	R_E "Sorry, please enter a correct username!"
 	exit 1
  elif grep -Eqi "$userName" /etc/passwd ; then
-	R_E "Sorry, the ${userName} has already exist, nothing to do!"
+	R_E "Sorry, the ${userName} has already exist, no user will add!"
  else 
 	useradd -G wheel ${userName}
 	G_E "Please enter the password twice now(The password will not show on the screen)"
@@ -91,6 +99,7 @@ EOF
 	fi
  fi
  G_E "Ok, all things done..."
+ G_E "Please remeber to change the SSH port and use the user you created here to login in the server. \n If you has any problems please use VNC model to rescue it."
 
 
  

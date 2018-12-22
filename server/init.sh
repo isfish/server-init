@@ -5,7 +5,7 @@
 # Revision: 
 #	v1.0 at 2018-10-23: Create the script 
 # 	v2.0 at 2018-11-16: Rebulid and rewrite the script
-#	v2.1 at 2018-11-29: fix some misspells and logic errors
+#	v2.1 at 2018-11-29: fix some logic errors
 ##########################################################################################
 
 #---------------------Begin the codes-----------------------------------#
@@ -45,7 +45,7 @@
  B_E "[+] Install new kernel..."
  # In some old 7.x system, run yum update first to make sure work done correctly.
  yum -y update
- sed -i 's/SELINUX=./SELINUX=dsiabled/g' /etc/selinux/config
+ sed -i 's/SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
  yum -y --enablerepo=elrepo-kernel install kernel-ml
