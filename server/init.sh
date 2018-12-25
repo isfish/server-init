@@ -48,7 +48,11 @@
  sed -i 's/SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
  rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
  rpm -Uvh https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
- yum -y --enablerepo=elrepo-kernel install kernel-ml
+ yum -y --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel
+ yum --enablerepo=elrepo-kernel -y swap kernel-headers -- kernel-ml-headers
+ yum --enablerepo=elrepo-kernel -y swap kernel-tools-libs -- kernel-ml-tools-libs
+ yum --enablerepo=elrepo-kernel -y install kernel-ml-tools
+ yum -y update
  egrep ^menuentry /etc/grub2.cfg | cut -f 2 -d \'
  read -p "Please specify 4.x kernel using number start from 0: " kenNum
  
